@@ -1,1 +1,1 @@
-web: gunicorn app:concurrency-bank
+web: gunicorn app:app
