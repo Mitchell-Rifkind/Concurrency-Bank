@@ -21,10 +21,33 @@ def login_post():
 
 
 @app.route('/home')
-def login():
+def home():
+    if flask.session.get('debit_transactions') is None:
+        database_methods.get_debit_transactions(flask.session['id'])
 
-    result = database_methods.get_debit_transactions(flask.session['id'])
-    if result:
-        return flask.render_template("home.html")
-    else:
-        return "Error"
+    return flask.render_template("home.html")
+
+
+@app.route('/savings')
+def savings():
+    return flask.render_template("savings.html")
+
+
+@app.route('/credit')
+def credit():
+    return flask.render_template("credit.html")
+
+
+@app.route('/transfer')
+def transfer():
+    return flask.render_template("transfer.html")
+
+
+@app.route('/personal')
+def personal():
+    return flask.render_template("personal.html")
+
+
+@app.route('/contact')
+def contact():
+    return flask.render_template("contact.html")

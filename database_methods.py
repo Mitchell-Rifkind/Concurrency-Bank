@@ -80,7 +80,7 @@ def get_debit_transactions(id):
 
     except exceptions.NoDatabaseConnectionError:
         print("Connection is not open")
-        return False
+        return
 
     query = '\
              select vendor_name, day, month, year, hour, minutes, seconds,\
@@ -113,4 +113,3 @@ def get_debit_transactions(id):
 
     flask.session['debit_transactions'] = transactions
     cursor.close()
-    return True
