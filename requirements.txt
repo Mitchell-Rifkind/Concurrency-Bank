@@ -12,4 +12,5 @@ mysqlclient==1.4.2.post1
 pep8==1.7.1
 pycodestyle==2.5.0
 pyflakes==2.1.1
+PyMySQL==0.9.3
 Werkzeug==0.15.1

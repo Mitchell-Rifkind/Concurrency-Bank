@@ -3,6 +3,7 @@ import pymysql
 import exceptions
 import flask
 import datetime
+import operator
 
 
 # Attempts to login and creates a session w/ name, email and debit balance
@@ -33,7 +34,7 @@ except exceptions.DatabaseConnectionError:
 def close_connect():
     if connection.open:
         connection.close()
-        print("MySQL connection is closed")
+    print("MySQL connection is closed")
 
 
 def login(email, post_password):
@@ -111,5 +112,21 @@ def get_debit_transactions(id):
         transactions[i].append(date)
         transactions[i].append(float(raw_transactions[i][7]))
 
+    print(transactions)
+    print("Yo!")
+    transactions.sort(reverse=True, key=operator.itemgetter(1))
+    print(transactions)
+
     flask.session['debit_transactions'] = transactions
     cursor.close()
+
+
+"""def get_savings_transactions(id):
+    # Retrieves array of all savings transactions
+
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return"""
