@@ -23,7 +23,7 @@ try:
             database=os.environ['database'],
             user=os.environ['user'],
             password=os.environ['password'],
-            port=os.environ['port']
+            port=int(os.environ['port'])
     )
 
     if connection.open:
