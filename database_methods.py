@@ -1,4 +1,4 @@
-import database_config
+# import database_config
 import pymysql
 import exceptions
 import flask
