@@ -4,17 +4,26 @@ import exceptions
 import flask
 import datetime
 import operator
+import os
 
 
 # Attempts to login and creates a session w/ name, email and debit balance
 try:
 
-    connection = pymysql.connect(
+    """connection = pymysql.connect(
             host=database_config.host,
             database=database_config.database,
             user=database_config.user,
             password=database_config.password,
             port=database_config.port
+    )"""
+
+    connection = pymysql.connect(
+            host=os.environ['host'],
+            database=os.environ['database'],
+            user=os.environ['user'],
+            password=os.environ['password'],
+            port=os.environ['port']
     )
 
     if connection.open:
