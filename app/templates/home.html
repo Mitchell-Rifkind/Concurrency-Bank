@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock %}
+{% block body %}
+    <h3>Welcome, {{ session['first_name'] }} {{ session['last_name'] }}</h3>
+    <h2>Your Balance : {{ session['balance'] }}</h2>
+    <h2>Recent Transactions :</h2>
+    <table>
+      <tr>
+        <th>Vendor</th>
+        <th>Date</th>
+        <th>Amount</th>
+      </tr>
+      {% for transaction in session['debit_transactions'] %}
+      <tr>
+        <td>{{ transaction[0] }}</td>
+        <td>{{ transaction[1] }}</td>
+        <td>{{ transaction[2] }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+{% endblock %}

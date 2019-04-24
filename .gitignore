@@ -1,1 +1,2 @@
-app/templates/database_config.py
+database_config.py
+session_key.py

@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
-    <title>{% block title %}{% endblock %}</title>
-    <!-- Bootstrap core CSS -->
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom styles for this template -->
-    <link href="https://getbootstrap.com/examples/jumbotron-narrow/jumbotron-narrow.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title></title>
+    {% block head %}
+    {% endblock %}
   </head>
   <body>
-    <div class="container">
-      <div class="header clearfix">
-        <nav>
-          <ul class="nav nav-pills pull-right">
-            <li role="presentation"><a href="/">Home</a></li>
-            <li role="presentation"><a href="/about">About</a></li>
-            <li role="presentation"><a href="http://flask.pocoo.org" target="_blank">Log In</a></li>
-          </ul>
-        </nav>
-      </div>
-      {% block body %}
-      {% endblock %}
-      <footer class="footer">
-        <p>© 2019 Mitchell Rifkind</p>
-      </footer>
-    </div> <!-- /container -->
+    <div class="vertnav">
+    <a class="active" href="#home">Home</a>
+    <a href="#savings">Savings</a>
+    <a href="#credit">Credit</a>
+    <a href="#transfers">Money Transfer</a>
+    <a href="#personal">Personal Info</a>
+    <a href="#contact">Contact Us</a>
+  </div>
+  <div class="content">
+    {% block body %}
+    {% endblock %}
+  </div>
   </body>
 </html>
