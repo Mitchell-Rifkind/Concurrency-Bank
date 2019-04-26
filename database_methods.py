@@ -34,6 +34,7 @@ try:
         cursor.execute("select database();")
         record = cursor.fetchone()
         print("You're connected to - ", record[0])
+        cursor.close()
     else:
         raise exceptions.DatabaseConnectionError
 
