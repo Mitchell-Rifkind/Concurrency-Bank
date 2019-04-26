@@ -6,6 +6,7 @@ import database_methods
 @app.route('/')
 def index():
     flask.session.clear()
+    database_methods.close_connect()
     return flask.render_template("login.html")
 
 
