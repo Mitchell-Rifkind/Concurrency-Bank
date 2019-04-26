@@ -8,6 +8,7 @@
   left: 0;
   overflow-x: hidden;
   float: left;
+  margin-right: 20px;
 }
 
 .vertnav a {
@@ -19,14 +20,10 @@
   font-size: 17px;
   margin-top: 30px;
   margin-bottom: 30px;
+  text-align: center;
 }
 
 .vertnav a:hover {
-  background-color: rgb(237, 238, 241);
-  color: black;
-}
-
-.vertnav a.active {
   background-color: rgb(237, 238, 241);
   color: black;
 }

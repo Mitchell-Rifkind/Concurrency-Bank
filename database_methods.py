@@ -5,6 +5,7 @@ import flask
 import datetime
 import operator
 import os
+import collections
 
 
 # Attempts to login and creates a session w/ name, email and debit balance
@@ -128,6 +129,27 @@ def get_debit_transactions(id):
 
     flask.session['debit_transactions'] = transactions
     cursor.close()
+
+
+def get_credit_history(id):
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = 'select id, first_name, last_name, account_number, vendor_name,\
+     amount, day, month, year, hour, minutes, seconds from credit_purchase\
+     natural join credit_owner natural join customer natural join vendor_name;'
+
+    cursor.execute(query)
+    raw_transactions = cursor.fetchall()
+
+    if raw_transactions is None:
+        return
+
+    transactions = []
 
 
 """def get_savings_transactions(id):
