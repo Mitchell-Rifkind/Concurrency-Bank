@@ -1,0 +1,30 @@
+@import url("https://fonts.googleapis.com/css?family=Ubuntu");
+
+.login_form {
+  border: 1px solid black;
+  position: relative;
+}
+
+input[type=text], input[type=password] {
+  width: 100%;
+  padding: 20px;
+  margin: 8px;
+  display: inline-block;
+  border: 1px solid black;
+  box-sizing: border-box;
+}
+
+.login_container {
+  position: relative;
+  padding: 20px;
+  width: 40%;
+  margin: 0 auto;
+}
+
+.submit_button {
+  text-align: center;
+}
+
+body {
+  font-family: Ubuntu;
+}

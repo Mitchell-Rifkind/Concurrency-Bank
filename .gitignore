@@ -1,2 +1,4 @@
 database_config.py
 session_key.py
+__pycache__
+app/__pycache__

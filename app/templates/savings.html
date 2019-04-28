@@ -1,5 +1,27 @@
 {% extends "base.html" %}
 {% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
+  <h3 class="greeting">Welcome, {{ session['first_name'] }} {{ session['last_name'] }}</h3>
+  <h2 class="balance">Your Balance : {{ session['savings_balance'] }} - Monthly Transfers : {{ session['savings_transfers_used']}}</h2>
+  <h2>Recent Transfers :</h2>
+  <table>
+    <tr>
+      <th>Amount</th>
+      <th>Date</th>
+      <th>Withdrawal / Deposit</th>
+      <th>From</th>
+      <th>To</th>
+    </tr>
+    {% for transaction in session['savings_transfers'] %}
+      <tr>
+        <td>{{ transaction[0] }}</td>
+        <td>{{ transaction[1] }}</td>
+        <td>{{ transaction[2] }}</td>
+        <td>{{ transaction[3] }}</td>
+        <td>{{ transaction[4] }}</td>
+      </tr>
+    {% endfor %}
+  </table>
 {% endblock %}

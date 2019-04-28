@@ -1,5 +1,31 @@
 {% extends "base.html" %}
 {% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
+  <h2 class="balance">Personal Information</h2>
+  <form class="personal_info_form" method="POST">
+    First Name: {{ session['personal_info'][0] }}<br><br>
+    Last Name: {{ session['personal_info'][1] }}<br><br>
+    Phone Number: {{ session['personal_info'][2] }}<br><br>
+    Email: {{ session['personal_info'][3] }}<br><br>
+    Street Number: {{ session['personal_info'][5] }}<br><br>
+    Street Name: {{ session['personal_info'][4] }}<br><br>
+    City: {{ session['personal_info'][6] }}<br><br>
+    Zipcode: {{ session['personal_info'][7] }}<br><br>
+    State: {{ session['personal_info'][8] }}<br><br>
+    Update Your Information:<br>
+    <select class="dropdown_menu" name="updated_value">
+      <option value="first_name">First Name</option>
+      <option value="last_name">Last Name</option>
+      <option value="phone">Phone Number</option>
+      <option value="email">Email</option>
+      <option value="street_number">Street Number</option>
+      <option value="street_name">Street Name</option>
+      <option value="city">City</option>
+      <option value="zipcode_state">Zipcode and State</option>
+    </select>
+    <input type="text" name="update">
+    <input type="submit" value="Submit">
+  </form>
 {% endblock %}

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css?family=Ubuntu");
 
 .vertnav {
   background-color: rgb(0, 126, 227);
@@ -28,11 +29,44 @@
   color: black;
 }
 
+.top_bar {
+  background-color: rgb(0, 126, 227);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.logo {
+  color: white;
+  padding-left: 30px;
+  padding-top: 5px;
+  display: inline;
+}
+
+#box {
+  padding: 0px;
+  margin: 6px;
+}
+
+.log_out_button {
+  float: right;
+  background-color: rgb(118, 133, 145);
+  text-decoration: none;
+  color: white;
+  border: 2px solid rgb(118, 133, 145);
+}
+
+.log_out_button:hover {
+  background-color: rgb(237, 238, 241);
+  color: black;
+  border: 2px solid rgb(237, 238, 241);
+}
+
 body {
   background-color: rgb(237, 238, 241);
   color: black;
   margin: 0;
   height: 100%;
+  font-family: Ubuntu;
 }
 
 * {

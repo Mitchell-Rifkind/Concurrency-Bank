@@ -2,14 +2,21 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login_styles.css') }}">
   </head>
   <body>
-
-    <form  method="POST">
-      <input name="email" placeholder="Email">
-      <input name="password" placeholder="Password">
-      <input type="submit">
+    <h2>Login</h2>
+    <form  class="login_form" method="POST">
+      <div class="login_container">
+        <label for="email"><b>Email</b></label>
+        <input type="text" name="email" placeholder="Email">
+        <label for="password"><b>Password</b></label>
+        <input type="password" name="password" placeholder="Password">
+        <div class="submit_button">
+          <input type="submit">
+        </div>
+      </div>
     </form>
 
   </body>

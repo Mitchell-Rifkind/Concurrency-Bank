@@ -14,6 +14,14 @@
     </style>
   </head>
   <body>
+    <div class="top_bar">
+      <h3 class="logo">Concurrency Bank</h3>
+      <a class="log_out_button" id="box" href="{{ url_for('log_out') }}">
+        <div class="log_out_button" id="text">
+          Log Out
+        </div>
+      </a>
+    </div>
     <div class="vertnav">
       <a class="home" href="{{ url_for('home') }}">Home</a>
       <a class="savings" href="{{ url_for('savings') }}">Savings</a>

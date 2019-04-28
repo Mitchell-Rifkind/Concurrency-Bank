@@ -1,23 +1,24 @@
 {% extends "base.html" %}
 {% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
-    <h3>Welcome, {{ session['first_name'] }} {{ session['last_name'] }}</h3>
-    <h2>Your Balance : {{ session['balance'] }}</h2>
-    <h2>Recent Transactions :</h2>
-    <table>
-      <tr>
-        <th>Vendor</th>
-        <th>Date</th>
-        <th>Amount</th>
-      </tr>
-      {% for transaction in session['debit_transactions'] %}
+  <h3 class="greeting">Welcome, {{ session['first_name'] }} {{ session['last_name'] }}</h3>
+  <h2 class="balance">Your Balance : {{ session['balance'] }}</h2>
+  <h2>Recent Transactions :</h2>
+  <table>
+    <tr>
+      <th>Vendor</th>
+      <th>Date</th>
+      <th>Amount</th>
+    </tr>
+    {% for transaction in session['debit_transactions'] %}
       <tr>
         <td>{{ transaction[0] }}</td>
         <td>{{ transaction[1] }}</td>
         <td>{{ transaction[2] }}</td>
       </tr>
-      {% endfor %}
-    </table>
-    <h2>Recent Transfers</h2>
+    {% endfor %}
+  </table>
+  <h2>Recent Transfers</h2>
 {% endblock %}
