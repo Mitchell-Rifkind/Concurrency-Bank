@@ -166,6 +166,17 @@ def get_debit_transfers():
     cursor.execute(query)
     raw_checking_transfers += cursor.fetchall()
 
+    query = "select amount, day, month, year, hour, minutes,\
+             seconds, account_from, type_from, account_to, type_to\
+             from credit_owner inner join transfer\
+             on credit_owner.account_number = transfer.account_to\
+             where account_from = %d and type_from = 'checking'\
+             " % (flask.session['id'])
+
+    cursor.execute(query)
+
+    raw_checking_transfers += cursor.fetchall()
+
     if raw_checking_transfers is None:
         return
 
@@ -189,12 +200,14 @@ def get_debit_transfers():
         checking_transfers[i].append(float(raw_checking_transfers[i][0]))
         checking_transfers[i].append(date)
 
-        if type_from == "Checking":
+        if type_from == "checking" and type_to == "credit":
+            checking_transfers[i].append("Payment")
+        elif type_from == "checking":
             checking_transfers[i].append("Withdrawal")
         else:
             checking_transfers[i].append("Deposit")
 
-        if account_from == account_to:
+        if account_from == account_to or type_to == "credit":
             checking_transfers[i].append("Personal - " + type_from)
             checking_transfers[i].append("Personal - " + type_to)
         elif account_from == flask.session['id']:
@@ -223,8 +236,6 @@ def get_debit_transfers():
 
     cursor.close()
     flask.session['checking_transfers'] = checking_transfers
-
-########################################################################################
 
 
 def get_credit_history():
@@ -510,8 +521,83 @@ def personal_transfer(transfer_type, amount):
     cursor.close()
 
 
-"""def credit_payment(account, amount):
+def credit_payment(account, amount):
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "update customer\
+             set balance = balance - %d\
+             where id = %d;" % (float(amount), flask.session['id'])
+
+    cursor.execute(query)
+
+    query = "update credit\
+             set line_of_credit_left = line_of_credit_left + %s\
+             where account_number = %s;" % (float(amount), account)
+
+    cursor.execute(query)
+
+    now = datetime.datetime.now()
+    year = now.year
+    month = now.month
+    day = now.day
+    hour = now.hour
+    minute = now.minute
+    second = now.second
+
+    query = 'insert into transfer\
+             (amount, day, month, year, hour, minutes, seconds, account_from,\
+              type_from, account_to, type_to)\
+              values\
+              (%d, %d, %d, %d, %d, %d, %d, %d, "%s", %d, "%s");\
+              ' % (amount, day, month, year, hour, minute, second,
+                   int(flask.session['id']), 'checking', int(account),
+                   'credit')
+
+    cursor.execute(query)
+    cursor.close()
 
 
+def send_money(recipient, amount):
+    try:
+        cursor = connection.cursor()
 
-def send_money(recipient, amount):"""
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "update customer\
+             set balance = balance - %d\
+             where id = %d" % (float(amount), flask.session['id'])
+
+    cursor.execute(query)
+
+    query = "update customer\
+             set balance = balance + %d\
+             where id = %d" % (float(amount), int(recipient))
+
+    cursor.execute(query)
+
+    now = datetime.datetime.now()
+    year = now.year
+    month = now.month
+    day = now.day
+    hour = now.hour
+    minute = now.minute
+    second = now.second
+
+    query = 'insert into transfer\
+             (amount, day, month, year, hour, minutes, seconds, account_from,\
+              type_from, account_to, type_to)\
+              values\
+              (%d, %d, %d, %d, %d, %d, %d, %d, "%s", %d, "%s");\
+              ' % (amount, day, month, year, hour, minute, second,
+                   int(flask.session['id']), 'checking', int(recipient),
+                   'checking')
+
+    cursor.execute(query)
+    cursor.close()
