@@ -20,5 +20,23 @@
       </tr>
     {% endfor %}
   </table>
-  <h2>Recent Transfers</h2>
+  <h2>Recent Transfers :</h2>
+  <table>
+    <tr>
+      <th>Amount</th>
+      <th>Date</th>
+      <th>Withdrawal / Deposit</th>
+      <th>From</th>
+      <th>To</th>
+    </tr>
+    {% for transaction in session['checking_transfers'] %}
+      <tr>
+        <td>{{ transaction[0] }}</td>
+        <td>{{ transaction[1] }}</td>
+        <td>{{ transaction[2] }}</td>
+        <td>{{ transaction[3] }}</td>
+        <td>{{ transaction[4] }}</td>
+      </tr>
+    {% endfor %}
+  </table>
 {% endblock %}

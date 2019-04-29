@@ -16,7 +16,8 @@ try:
             database=database_config.database,
             user=database_config.user,
             password=database_config.password,
-            port=database_config.port
+            port=database_config.port,
+            autocommit=True
     )"""
 
     connection = pymysql.connect(
@@ -24,7 +25,8 @@ try:
             database=os.environ['database'],
             user=os.environ['user'],
             password=os.environ['password'],
-            port=int(os.environ['port'])
+            port=int(os.environ['port']),
+            autocommit=True
     )
 
     if connection.open:
@@ -68,14 +70,11 @@ def login(email, post_password):
     else:
         flask.session['email'] = email
 
-        cursor.execute("select id, first_name, last_name, balance\
+        cursor.execute("select id\
                        from customer where email = '%s';" % email)
 
         result = cursor.fetchone()
         flask.session['id'] = int(result[0])
-        flask.session['first_name'] = result[1]
-        flask.session['last_name'] = result[2]
-        flask.session['balance'] = float(result[3])
 
         result = True
 
@@ -92,6 +91,17 @@ def get_debit_transactions():
     except exceptions.NoDatabaseConnectionError:
         print("Connection is not open")
         return
+
+    query = "select first_name, last_name, balance\
+             from customer\
+             where id = %s;" % flask.session['id']
+
+    cursor.execute(query)
+    result = cursor.fetchone()
+
+    flask.session['first_name'] = result[0]
+    flask.session['last_name'] = result[1]
+    flask.session['balance'] = float(result[2])
 
     query = '\
              select vendor_name, day, month, year, hour, minutes, seconds,\
@@ -126,6 +136,95 @@ def get_debit_transactions():
 
     cursor.close()
     flask.session['debit_transactions'] = transactions
+
+
+def get_debit_transfers():
+
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "select *\
+             from transfer\
+             where\
+             account_from = %d and type_from = 'checking'\
+             and type_to <> 'credit';\
+             " % flask.session['id']
+
+    cursor.execute(query)
+    raw_checking_transfers = cursor.fetchall()
+
+    query = "select *\
+             from transfer\
+             where\
+             account_to = %d and type_to = 'checking';\
+             " % flask.session['id']
+
+    cursor.execute(query)
+    raw_checking_transfers += cursor.fetchall()
+
+    if raw_checking_transfers is None:
+        return
+
+    checking_transfers = []
+
+    for i in range(0, len(raw_checking_transfers)):
+        checking_transfers.append([])
+
+        account_from = int(raw_checking_transfers[i][7])
+        type_from = raw_checking_transfers[i][8]
+        account_to = int(raw_checking_transfers[i][9])
+        type_to = raw_checking_transfers[i][10]
+
+        date = datetime.datetime(int(raw_checking_transfers[i][3]),
+                                 int(raw_checking_transfers[i][2]),
+                                 int(raw_checking_transfers[i][1]),
+                                 int(raw_checking_transfers[i][4]),
+                                 int(raw_checking_transfers[i][5]),
+                                 int(raw_checking_transfers[i][6]))
+
+        checking_transfers[i].append(float(raw_checking_transfers[i][0]))
+        checking_transfers[i].append(date)
+
+        if type_from == "Checking":
+            checking_transfers[i].append("Withdrawal")
+        else:
+            checking_transfers[i].append("Deposit")
+
+        if account_from == account_to:
+            checking_transfers[i].append("Personal - " + type_from)
+            checking_transfers[i].append("Personal - " + type_to)
+        elif account_from == flask.session['id']:
+            checking_transfers[i].append("Personal - " + type_from)
+            query = "select first_name, last_name\
+                     from customer\
+                     where id = %d;" % account_to
+
+            cursor.execute(query)
+            raw_receiver = cursor.fetchone()
+            receiver = raw_receiver[0] + " " + raw_receiver[1]
+            checking_transfers[i].append(receiver)
+        else:
+            query = "select first_name, last_name\
+                     from customer\
+                     where id = %d;" % account_from
+
+            cursor.execute(query)
+            raw_receiver = cursor.fetchone()
+            receiver = raw_receiver[0] + " " + raw_receiver[1]
+            checking_transfers[i].append(receiver)
+
+            checking_transfers[i].append("Personal - " + type_to)
+
+    checking_transfers.sort(reverse=True, key=operator.itemgetter(1))
+
+    cursor.close()
+    flask.session['checking_transfers'] = checking_transfers
+
+########################################################################################
 
 
 def get_credit_history():
@@ -254,7 +353,7 @@ def get_savings_transfers():
         savings_transfers[i].append(float(raw_savings_transfers[i][0]))
         savings_transfers[i].append(date)
 
-        if type_from == "Savings":
+        if type_from == "savings":
             savings_transfers[i].append("Withdrawal")
         else:
             savings_transfers[i].append("Deposit")
@@ -348,3 +447,71 @@ def update_info(field, value):
 
     cursor.execute(query)
     cursor.close()
+
+
+def personal_transfer(transfer_type, amount):
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    if transfer_type == "checking_to_savings":
+        query = "update customer\
+                 set balance = balance - %d\
+                 where id = %d;" % (float(amount), flask.session['id'])
+
+        cursor.execute(query)
+
+        query = "update savings\
+                 set balance = balance + %d\
+                 where id = %d;" % (float(amount), flask.session['id'])
+
+        cursor.execute(query)
+
+        type_from = "checking"
+        type_to = "savings"
+
+    else:
+        query = "update savings\
+                 set balance = balance - %d\
+                 where id = %d;" % (float(amount), flask.session['id'])
+
+        cursor.execute(query)
+
+        query = "update customer\
+                 set balance = balance + %d\
+                 where id = %d;" % (float(amount), flask.session['id'])
+
+        cursor.execute(query)
+
+        type_from = "savings"
+        type_to = "checking"
+
+    now = datetime.datetime.now()
+    year = now.year
+    month = now.month
+    day = now.day
+    hour = now.hour
+    minute = now.minute
+    second = now.second
+
+    query = 'insert into transfer\
+             (amount, day, month, year, hour, minutes, seconds, account_from,\
+              type_from, account_to, type_to)\
+              values\
+              (%d, %d, %d, %d, %d, %d, %d, %d, "%s", %d, "%s");\
+              ' % (amount, day, month, year, hour, minute, second,
+                   flask.session['id'], type_from, flask.session['id'],
+                   type_to)
+
+    cursor.execute(query)
+    cursor.close()
+
+
+"""def credit_payment(account, amount):
+
+
+
+def send_money(recipient, amount):"""

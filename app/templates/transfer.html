@@ -1,5 +1,30 @@
 {% extends "base.html" %}
 {% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
+  <h2 class="balance">Personal Transfer</h2>
+  <form class="transfer_form" method="POST">
+    <select class="dropdown_menu" name="personal_transfer">
+      <option value="checking_to_savings">Checking to Savings</option>
+      <option value="savings_to_checking">Savings to Checking</option>
+    </select>
+    <input type="text" name="personal_transfer_amount" placeholder="Amount">
+    <input type="hidden" name="action" value="personal">
+    <input type="submit" value="Submit">
+  </form>
+  <h2 class="balance">Pay Credit Card</h2>
+  <form class="transfer_form" method="POST">
+    <input type="text" name="credit_account" placeholder="Account Number">
+    <input type="text" name="credit_payment" placeholder="Amount">
+    <input type="hidden" name="action" value="payment">
+    <input type="submit" value="Submit">
+  </form>
+  <h2 class="balance">Send Money</h2>
+  <form class="transfer_form" method="POST">
+    <input type="text" name="send_to" placeholder="Recipient">
+    <input type="text" name="transfer_amount" placeholder="Amount">
+    <input type="hidden" name="action" value="transfer_to">
+    <input type="submit" value="Submit">
+  </form>
 {% endblock %}

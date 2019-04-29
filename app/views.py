@@ -28,8 +28,8 @@ def log_out():
 
 @app.route('/home')
 def home():
-    if flask.session.get('debit_transactions') is None:
-        database_methods.get_debit_transactions()
+    database_methods.get_debit_transactions()
+    database_methods.get_debit_transfers()
 
     flask.session['page'] = '.home'
     return flask.render_template("home.html")
@@ -37,18 +37,14 @@ def home():
 
 @app.route('/savings')
 def savings():
-    if flask.session.get('savings_balance') is None:
-        database_methods.get_savings_transfers()
-
+    database_methods.get_savings_transfers()
     flask.session['page'] = '.savings'
     return flask.render_template("savings.html")
 
 
 @app.route('/credit')
 def credit():
-    if flask.session.get('credit_transactions') is None:
-        database_methods.get_credit_history()
-
+    database_methods.get_credit_history()
     flask.session['page'] = '.credit'
     return flask.render_template("credit.html")
 
@@ -59,19 +55,37 @@ def transfer():
     return flask.render_template("transfer.html")
 
 
+@app.route('/transfer', methods=['POST'])
+def transfer_action():
+    if flask.request.form['action'] == 'personal':
+        transfer_type = flask.request.form['personal_transfer']
+        amount = int(flask.request.form['personal_transfer_amount'])
+        database_methods.personal_transfer(transfer_type, amount)
+
+    elif flask.request.form['action'] == 'payment':
+        account = flask.request.form['credit_account']
+        amount = int(flask.request.form['credit_payment'])
+        database_methods.credit_payment(account, amount)
+
+    else:
+        recipient = flask.request.form['send_to']
+        amount = int(flask.request.form['transfer_amount'])
+        database_methods.send_money(recipient, amount)
+
+    return flask.render_template('transfer.html')
+
+
 @app.route('/personal')
 def personal():
-    if flask.session.get('personal_info') is None:
-        database_methods.get_personal_info()
-
     flask.session['page'] = '.personal'
+    database_methods.get_personal_info()
     return flask.render_template("personal.html")
 
 
 @app.route('/personal', methods=['POST'])
 def update_personal():
     field = flask.request.form['updated_value']
-    value = flask.request.form['update']
+    value = flask.request.form['update_personal']
 
     database_methods.update_info(field, value)
 
