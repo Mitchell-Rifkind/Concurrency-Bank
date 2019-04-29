@@ -32,7 +32,7 @@
 .top_bar {
   background-color: rgb(0, 126, 227);
   padding-top: 10px;
-  padding-bottom: 10px;
+  padding-bottom: 14px;
 }
 
 .logo {
@@ -44,7 +44,7 @@
 
 #box {
   padding: 0px;
-  margin: 6px;
+  margin-right: 10px;
 }
 
 .log_out_button {

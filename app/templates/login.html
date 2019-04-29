@@ -7,6 +7,9 @@
   </head>
   <body>
     <h2>Login</h2>
+    {% if session.get('message') is not none %}
+      <h4>{{ session['message'] }}</h4>
+    {% endif %}
     <form  class="login_form" method="POST">
       <div class="login_container">
         <label for="email"><b>Email</b></label>

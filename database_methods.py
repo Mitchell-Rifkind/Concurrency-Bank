@@ -1,4 +1,4 @@
-# import database_config
+import database_config
 import pymysql
 import exceptions
 import flask
@@ -11,23 +11,23 @@ import collections
 # Attempts to login and creates a session w/ name, email and debit balance
 try:
 
-    """connection = pymysql.connect(
+    connection = pymysql.connect(
             host=database_config.host,
             database=database_config.database,
             user=database_config.user,
             password=database_config.password,
             port=database_config.port,
             autocommit=True
-    )"""
+    )
 
-    connection = pymysql.connect(
+    """connection = pymysql.connect(
             host=os.environ['host'],
             database=os.environ['database'],
             user=os.environ['user'],
             password=os.environ['password'],
             port=int(os.environ['port']),
             autocommit=True
-    )
+    )"""
 
     if connection.open:
         print("Connected to MySQL db")
@@ -469,6 +469,22 @@ def personal_transfer(transfer_type, amount):
         return
 
     if transfer_type == "checking_to_savings":
+        query = "select balance\
+                 from customer\
+                 where id = %s;" % flask.session['id']
+    else:
+        query = "select balance\
+                 from savings\
+                 where id = %s;" % flask.session['id']
+
+    cursor.execute(query)
+    balance = float(cursor.fetchone()[0])
+
+    if balance < amount:
+        flask.session['message'] = "Insufficient Funds"
+        return
+
+    if transfer_type == "checking_to_savings":
         query = "update customer\
                  set balance = balance - %d\
                  where id = %d;" % (float(amount), flask.session['id'])
@@ -529,6 +545,31 @@ def credit_payment(account, amount):
         print("Connection is not open")
         return
 
+    query = "select balance\
+             from customer\
+             where id = %s;" % flask.session['id']
+
+    cursor.execute(query)
+    balance = float(cursor.fetchone()[0])
+
+    if balance < amount:
+        flask.session['message'] = "Insufficient Funds"
+        return
+
+    query = "select line_of_credit, line_of_credit_left\
+             from credit\
+             where account_number = %s;" % account
+
+    cursor.execute(query)
+    raw_info = cursor.fetchone()
+    line_of_credit = float(raw_info[0])
+    line_of_credit_left = float(raw_info[1])
+
+    if line_of_credit_left + amount > line_of_credit:
+        flask.session['message'] = "Payment exceeds line of credit by \
+                                    " + str(line_of_credit_left + amount - line_of_credit)
+        return
+
     query = "update customer\
              set balance = balance - %d\
              where id = %d;" % (float(amount), flask.session['id'])
@@ -570,15 +611,37 @@ def send_money(recipient, amount):
         print("Connection is not open")
         return
 
+    query = "select balance\
+             from customer\
+             where id = %s;" % flask.session['id']
+
+    cursor.execute(query)
+    balance = float(cursor.fetchone()[0])
+
+    if balance < amount:
+        flask.session['message'] = "Insufficient Funds"
+        return
+
+    query = "select balance\
+             from customer\
+             where id = %s;" % flask.session['id']
+
+    cursor.execute(query)
+    balance = float(cursor.fetchone()[0])
+
+    if balance < amount:
+        flask.session['message'] = "Insufficient Funds"
+        return
+
     query = "update customer\
              set balance = balance - %d\
-             where id = %d" % (float(amount), flask.session['id'])
+             where id = %d;" % (float(amount), flask.session['id'])
 
     cursor.execute(query)
 
     query = "update customer\
              set balance = balance + %d\
-             where id = %d" % (float(amount), int(recipient))
+             where id = %d;" % (float(amount), int(recipient))
 
     cursor.execute(query)
 
@@ -598,6 +661,23 @@ def send_money(recipient, amount):
               ' % (amount, day, month, year, hour, minute, second,
                    int(flask.session['id']), 'checking', int(recipient),
                    'checking')
+
+    cursor.execute(query)
+    cursor.close()
+
+
+def open_savings_account():
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "insert into savings\
+             (id, balance, monthly_transfer)\
+             values\
+             (%d, 0, 0);" % flask.session['id']
 
     cursor.execute(query)
     cursor.close()

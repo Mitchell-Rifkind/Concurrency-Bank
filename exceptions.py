@@ -8,3 +8,7 @@ class DatabaseConnectionError(Error):
 
 class NoDatabaseConnectionError(Error):
     pass
+
+
+class InsufficientFundsError(Error):
+    pass

@@ -15,8 +15,10 @@ def login_post():
     result = database_methods.login(email, post_password)
 
     if result:
+        flask.session['message'] = None
         return flask.redirect('/home')
     else:
+        flask.session['message'] = "Incorrect Information"
         return flask.redirect('/')
 
 
@@ -42,6 +44,13 @@ def savings():
     return flask.render_template("savings.html")
 
 
+@app.route('/savings', methods=['POST'])
+def add_savings():
+    database_methods.open_savings_account()
+
+    return flask.redirect("/savings")
+
+
 @app.route('/credit')
 def credit():
     database_methods.get_credit_history()
@@ -57,19 +66,20 @@ def transfer():
 
 @app.route('/transfer', methods=['POST'])
 def transfer_action():
+    flask.session['message'] = None
     if flask.request.form['action'] == 'personal':
         transfer_type = flask.request.form['personal_transfer']
-        amount = int(flask.request.form['personal_transfer_amount'])
+        amount = float(flask.request.form['personal_transfer_amount'])
         database_methods.personal_transfer(transfer_type, amount)
 
     elif flask.request.form['action'] == 'payment':
         account = flask.request.form['credit_account']
-        amount = int(flask.request.form['credit_payment'])
+        amount = float(flask.request.form['credit_payment'])
         database_methods.credit_payment(account, amount)
 
     else:
         recipient = flask.request.form['send_to']
-        amount = int(flask.request.form['transfer_amount'])
+        amount = float(flask.request.form['transfer_amount'])
         database_methods.send_money(recipient, amount)
 
     return flask.render_template('transfer.html')
