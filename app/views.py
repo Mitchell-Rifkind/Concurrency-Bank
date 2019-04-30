@@ -5,6 +5,7 @@ import database_methods
 
 @app.route('/')
 def index():
+    flask.session['message'] = None
     flask.session['login_attempts'] = 0
     return flask.render_template("login.html")
 
@@ -32,8 +33,34 @@ def login_post():
 
 
 @app.route('/register')
-def register():
+def register_page():
+    flask.session['message'] = None
     return flask.render_template('register.html')
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    flask.session['message'] = None
+    form = {}
+    form['first_name'] = flask.request.form['first_name']
+    form['last_name'] = flask.request.form['last_name']
+    form['ssn'] = flask.request.form['ssn']
+    form['phone'] = flask.request.form['phone']
+    form['email'] = flask.request.form['email']
+    form['password'] = flask.request.form['password']
+    form['balance'] = flask.request.form['balance']
+    form['street_name'] = flask.request.form['street_name']
+    form['street_number'] = flask.request.form['street_number']
+    form['city'] = flask.request.form['city']
+    form['state'] = flask.request.form['state']
+    form['zipcode'] = flask.request.form['zipcode']
+
+    database_methods.registration(form)
+
+    if flask.session['message'] is None:
+        return flask.redirect('/home')
+    else:
+        return flask.render_template('register.html')
 
 
 @app.route('/logout')
@@ -83,11 +110,12 @@ def new_line_of_credit():
         database_methods.delete_credit(int(
             flask.request.form['account_number']))
 
-    return flask.render_template('credit.html')
+    return flask.redirect('/credit')
 
 
 @app.route('/transfer')
 def transfer():
+    flask.session['message'] = None
     flask.session['page'] = '.transfer'
     return flask.render_template("transfer.html")
 
@@ -115,6 +143,7 @@ def transfer_action():
 
 @app.route('/personal')
 def personal():
+    flask.session['message'] = None
     flask.session['page'] = '.personal'
     database_methods.get_personal_info()
     return flask.render_template("personal.html")
@@ -122,13 +151,19 @@ def personal():
 
 @app.route('/personal', methods=['POST'])
 def update_personal():
-    field = flask.request.form['updated_value']
-    value = flask.request.form['update_personal']
-
-    database_methods.update_info(field, value)
+    if flask.request.form['action'] == "update_info":
+        field = flask.request.form['updated_value']
+        value = flask.request.form['update_personal']
+        database_methods.update_info(field, value)
+    else:
+        old_pass = flask.request.form['old_pass']
+        new_pass = flask.request.form['new_pass']
+        database_methods.update_password(old_pass, new_pass)
+        flask.session['old_pass'] = None
+        flask.session['new_pass'] = None
 
     flask.session['personal_info'] = None
-    return flask.redirect("/personal")
+    return flask.render_template("personal.html")
 
 
 @app.route('/contact')

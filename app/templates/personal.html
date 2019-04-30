@@ -3,6 +3,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
+  {% if session['message'] is not none %}
+    <h4 class="error_message">{{ session['message'] }}</h4>
+  {% endif %}
   <h2 class="balance">Personal Information</h2>
   <form class="personal_info_form" method="POST">
     First Name: {{ session['personal_info'][0] }}<br><br>
@@ -14,7 +17,8 @@
     City: {{ session['personal_info'][6] }}<br><br>
     Zipcode: {{ session['personal_info'][7] }}<br><br>
     State: {{ session['personal_info'][8] }}<br><br>
-    Update Your Information:<br>
+    Update Your Information:<br><br>
+    <input type="hidden" name="action" value="update_info">
     <select class="dropdown_menu" name="updated_value">
       <option value="first_name">First Name</option>
       <option value="last_name">Last Name</option>
@@ -26,6 +30,14 @@
       <option value="zipcode_state">Zipcode and State</option>
     </select>
     <input type="text" name="update_personal">
+    <input type="submit" value="Submit">
+  </form>
+  <br>
+  <form class="password_update" method="POST">
+    Update Your Password:<br><br>
+    <input type="hidden" name="action" value="update_password">
+    Enter Your Old Password: <input type="password" name="old_pass"><br><br>
+    Enter Your New Password: <input type="password" name="new_pass"><br><br>
     <input type="submit" value="Submit">
   </form>
 {% endblock %}

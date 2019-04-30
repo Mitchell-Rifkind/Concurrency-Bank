@@ -1,16 +1,20 @@
 @import url("https://fonts.googleapis.com/css?family=Ubuntu");
 
 .center_form {
-  display: inline-block;
+  left: 37.5%;
+  width: 25%;
+  display: block;
+  overflow: auto;
+  position: relative;
 }
 
 body {
   font-family: Ubuntu;
-  text-align: center;
-  margin-top: 5%;
+  margin-top: 2%;
 }
 
 input {
   margin: 6px;
   padding: 6px;
+  float: right;
 }

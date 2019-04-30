@@ -702,7 +702,12 @@ def get_credit_check():
 
     cursor.execute(query)
 
-    flask.session['cc_count'] = int(cursor.fetchone()[0])
+    cc_count_raw = cursor.fetchone()
+
+    if cc_count_raw is None:
+        flask.session['cc_count'] = 0
+    else:
+        flask.session['cc_count'] = int(cc_count_raw[0])
 
     cursor.close()
 
@@ -721,7 +726,11 @@ def open_credit_account():
 
     cursor.execute(query)
     raw_credit = cursor.fetchone()
-    line_of_credit = float(raw_credit[0])
+
+    if raw_credit[0] is None:
+        line_of_credit = 0
+    else:
+        line_of_credit = float(raw_credit[0])
 
     query = "select balance\
              from savings\
@@ -729,7 +738,11 @@ def open_credit_account():
 
     cursor.execute(query)
     raw_savings = cursor.fetchone()
-    savings = float(raw_savings[0]) - (line_of_credit * 2)
+    if raw_savings is None:
+        savings = 0
+    else:
+        savings = float(raw_savings[0])
+    savings = savings - (line_of_credit * 2)
 
     if savings > 4000:
         new_line_of_credit = 2000
@@ -789,3 +802,119 @@ def delete_credit(account_number):
              where account_number = %d" % account_number
 
     cursor.execute(query)
+
+
+def update_password(old_pass, new_pass):
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "select password\
+             from customer\
+             where id = %d;" % flask.session['id']
+
+    cursor.execute(query)
+
+    password = cursor.fetchone()[0]
+    print(password)
+
+    if password != old_pass:
+        flask.session['message'] = "Your password was not updated as the old \
+                                    password you entered was incorrect"
+        return
+
+    query = "update customer\
+             set password = '%s'\
+             where id = %d;" % (new_pass, flask.session['id'])
+
+    cursor.execute(query)
+    cursor.close()
+
+    flask.session['message'] = "Your password was updated successfully"
+
+
+def registration(form):
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "select id\
+             from customer\
+             where email = '%s';" % form['email']
+
+    cursor.execute(query)
+
+    if cursor.fetchone() is not None:
+        flask.session['message'] = "An account already exists with this email"
+        return
+
+    query = "select id\
+             from customer\
+             where ssn = %d;" % int(form['ssn'])
+
+    cursor.execute(query)
+
+    if cursor.fetchone() is not None:
+        flask.session['message'] = "An account already exists with this SSN"
+        return
+
+    if int(form['balance']) < 20:
+        flask.session['message'] = "The initial deposit must be at least $20"
+        return
+
+    query = "select state\
+             from state\
+             where zipcode = %d" % int(form['zipcode'])
+
+    cursor.execute(query)
+
+    if cursor.fetchone() is None:
+        query = "insert into state\
+                 (zipcode, state)\
+                 values\
+                 (%d, '%s');" % (int(form['zipcode']), form['state'])
+
+        cursor.execute(query)
+
+    new_id = random.randint(100000000000, 999999999999)
+
+    query = "insert into customer\
+             (id, first_name, last_name, ssn, phone, email, password, balance,\
+              street_name, street_number, city, zipcode)\
+              values\
+              (%d, '%s', '%s', %d, %d, '%s', '%s', %d, '%s', %d, '%s', %d);\
+              " % (new_id, form['first_name'], form['last_name'],
+                   int(form['ssn']), int(form['phone']), form['email'],
+                   form['password'], float(form['balance']),
+                   form['street_name'], int(form['street_number']),
+                   form['city'], int(form['zipcode']))
+
+    cursor.execute(query)
+
+    now = datetime.datetime.now()
+    year = now.year
+    month = now.month
+    day = now.day
+    hour = now.hour
+    minute = now.minute
+    second = now.second
+
+    query = "insert into transfer\
+             (amount, day, month, year, hour, minutes, seconds, account_from,\
+             type_from, account_to, type_to)\
+             values\
+             (%d, %d, %d, %d, %d, %d, %d, %d, '%s', %d, '%s');\
+             " % (float(form['balance']), day, month, year, hour, minute,
+                  second, new_id, 'Initial Deposit', new_id, 'checking')
+
+    cursor.execute(query)
+    cursor.close()
+
+    flask.session['email'] = form['email']
+    flask.session['id'] = new_id

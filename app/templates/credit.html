@@ -32,10 +32,12 @@
     </table>
   {% endfor %}
   <br><br><br>
+  {% if session['cc_count'] != 0 %}
   <form method="POST">
     <h3>Delete Credit Account</h3>
     <input type="hidden" name="action" value="delete_credit">
     <input type="text" name="account_number" placeholder="Account Number">
     <input type="submit" value="Delete Account">
   </form>
+  {% endif %}
 {% endblock %}
