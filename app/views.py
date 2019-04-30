@@ -5,21 +5,35 @@ import database_methods
 
 @app.route('/')
 def index():
+    flask.session['login_attempts'] = 0
     return flask.render_template("login.html")
 
 
 @app.route('/', methods=['POST'])
 def login_post():
-    email = flask.request.form['email']
-    post_password = flask.request.form['password']
-    result = database_methods.login(email, post_password)
+    flask.session['message'] = None
 
-    if result:
-        flask.session['message'] = None
-        return flask.redirect('/home')
+    if flask.request.form['action'] == 'login_attempt':
+        email = flask.request.form['email']
+        post_password = flask.request.form['password']
+        result = database_methods.login(email, post_password)
+
+        if result:
+            flask.session['message'] = None
+            return flask.redirect('/home')
+        else:
+            if flask.session['login_attempts'] == 2:
+                return flask.render_template('lockout.html')
+            flask.session['login_attempts'] += 1
+            flask.session['message'] = "Incorrect Information"
+            return flask.render_template('login.html')
     else:
-        flask.session['message'] = "Incorrect Information"
-        return flask.redirect('/')
+        return flask.redirect('/register')
+
+
+@app.route('/register')
+def register():
+    return flask.render_template('register.html')
 
 
 @app.route('/logout')
@@ -30,6 +44,7 @@ def log_out():
 
 @app.route('/home')
 def home():
+    flask.session['message'] = None
     database_methods.get_debit_transactions()
     database_methods.get_debit_transfers()
 
@@ -54,8 +69,21 @@ def add_savings():
 @app.route('/credit')
 def credit():
     database_methods.get_credit_history()
+    database_methods.get_credit_check()
     flask.session['page'] = '.credit'
     return flask.render_template("credit.html")
+
+
+@app.route('/credit', methods=['POST'])
+def new_line_of_credit():
+    flask.session['message'] = None
+    if flask.request.form['action'] == 'create_credit':
+        database_methods.open_credit_account()
+    else:
+        database_methods.delete_credit(int(
+            flask.request.form['account_number']))
+
+    return flask.render_template('credit.html')
 
 
 @app.route('/transfer')

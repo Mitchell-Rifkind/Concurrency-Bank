@@ -3,8 +3,18 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
+  {% if session['message'] is not none %}
+    <h4 class="error_message">{{ session['message'] }}</h4>
+  {% endif %}
+  {% if session['cc_count'] != 3 %}
+    <h3>Open a New Credit Account</h3>
+    <form method="POST">
+      <input type="hidden" name="action" value="create_credit">
+      <input type="submit" value="Create Account">
+    </form>
+  {% endif %}
   {% for account, transactions in session['credit_transactions'].items() %}
-    <h2 class="balance">Acccount: {{ account }} - Amount Owed : {{ session['amount_owed'][account] }}</h2>
+    <h2 class="balance">Acccount: {{ account }} - Amount Owed : {{ session['amount_owed'][account][0] }} - Credit Left : {{ session['amount_owed'][account][1] }}</h2>
     <h2>Recent Transactions :</h2>
     <table>
       <tr>
@@ -21,4 +31,11 @@
       {% endfor %}
     </table>
   {% endfor %}
+  <br><br><br>
+  <form method="POST">
+    <h3>Delete Credit Account</h3>
+    <input type="hidden" name="action" value="delete_credit">
+    <input type="text" name="account_number" placeholder="Account Number">
+    <input type="submit" value="Delete Account">
+  </form>
 {% endblock %}

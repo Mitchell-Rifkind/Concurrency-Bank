@@ -11,6 +11,7 @@
       <h4>{{ session['message'] }}</h4>
     {% endif %}
     <form  class="login_form" method="POST">
+      <input type="hidden" name="action" value="login_attempt">
       <div class="login_container">
         <label for="email"><b>Email</b></label>
         <input type="text" name="email" placeholder="Email">
@@ -20,6 +21,11 @@
           <input type="submit">
         </div>
       </div>
+    </form>
+
+    <form class="register_form" method="POST">
+      <input type="submit" name="register" value="Register">
+      <input type="hidden" name="action" value="register">
     </form>
 
   </body>

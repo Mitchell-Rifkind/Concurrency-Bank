@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/registration_styles.css') }}">
+  </head>
+  <body>
+    <h1>Register with Concurrency Bank!</h1>
+    <div class="center_form">
+      <form class="registration" method="POST">
+        First Name: <input type="text" name="first_name" placeholder="First Name"><br>
+        Last Name: <input type="text" name="last_name" placeholder="Last Name"><br>
+        Social Security Number: <input type="text" name="ssn" placeholder="SSN"><br>
+        Phone Number: <input type="text" name="phone" placeholder="Phone Number"><br>
+        Email: <input type="text" name="email" placeholder="Email"><br>
+        Password: <input type="password" name="password" placeholder="Password"><br>
+        Initial Deposit: <input type="text" name="balance" placeholder="Initial Balance"><br>
+        Street Name: <input type="text" name="street_name" placeholder="Street Name"><br>
+        Street Number: <input type="text" name="street_number" placeholder="Street Number"><br>
+        City: <input type="text" name="city" placeholder="City"><br>
+        State: <input type="text" name="state" placeholder="State"><br>
+        Zipcode: <input type="text" name="zipcode" placeholder="Zipcode"><br>
+        <input type="submit" value="Submit">
+      </form>
+    </div>
+  </body>
+</html>

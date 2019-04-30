@@ -3,6 +3,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/accounts_styles.css') }}">
 {% endblock %}
 {% block body %}
+  {% if session['message'] is not none %}
+    <h4 class="error_message">{{ session['message'] }}</h4>
+  {% endif %}
   <h3 class="greeting">Welcome, {{ session['first_name'] }} {{ session['last_name'] }}</h3>
   <h2 class="balance">Your Balance : {{ session['balance'] }}</h2>
   <h2>Recent Transactions :</h2>

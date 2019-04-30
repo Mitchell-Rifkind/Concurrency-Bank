@@ -1,33 +1,33 @@
-# import database_config
+import database_config
 import pymysql
 import exceptions
 import flask
 import datetime
 import operator
 import os
-import collections
+import random
 
 
 # Attempts to login and creates a session w/ name, email and debit balance
 try:
 
-    """connection = pymysql.connect(
+    connection = pymysql.connect(
             host=database_config.host,
             database=database_config.database,
             user=database_config.user,
             password=database_config.password,
             port=database_config.port,
             autocommit=True
-    )"""
+    )
 
-    connection = pymysql.connect(
+    """connection = pymysql.connect(
             host=os.environ['host'],
             database=os.environ['database'],
             user=os.environ['user'],
             password=os.environ['password'],
             port=int(os.environ['port']),
             autocommit=True
-    )
+    )"""
 
     if connection.open:
         print("Connected to MySQL db")
@@ -102,6 +102,9 @@ def get_debit_transactions():
     flask.session['first_name'] = result[0]
     flask.session['last_name'] = result[1]
     flask.session['balance'] = float(result[2])
+
+    if flask.session['balance'] < 25:
+        flask.session['message'] = "Your Account Balance is Getting Low!"
 
     query = '\
              select vendor_name, day, month, year, hour, minutes, seconds,\
@@ -278,7 +281,7 @@ def get_credit_history():
         cursor.execute(query)
         raw_credit = cursor.fetchone()
         owed = float(raw_credit[1]) - float(raw_credit[2])
-        account_balance[account] = owed
+        account_balance[account] = [owed, float(raw_credit[2])]
 
     for i in range(0, len(raw_transactions)):
         temp = []
@@ -567,7 +570,8 @@ def credit_payment(account, amount):
 
     if line_of_credit_left + amount > line_of_credit:
         flask.session['message'] = "Payment exceeds line of credit by \
-                                    " + str(line_of_credit_left + amount - line_of_credit)
+                                    " + str(line_of_credit_left + amount -
+                                            line_of_credit)
         return
 
     query = "update customer\
@@ -681,3 +685,107 @@ def open_savings_account():
 
     cursor.execute(query)
     cursor.close()
+
+
+def get_credit_check():
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "select count(account_number)\
+             from credit_owner\
+             where id = %d\
+             group by id" % (flask.session['id'])
+
+    cursor.execute(query)
+
+    flask.session['cc_count'] = int(cursor.fetchone()[0])
+
+    cursor.close()
+
+
+def open_credit_account():
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "select sum(line_of_credit)\
+             from credit natural join credit_owner\
+             where id = %d" % flask.session['id']
+
+    cursor.execute(query)
+    raw_credit = cursor.fetchone()
+    line_of_credit = float(raw_credit[0])
+
+    query = "select balance\
+             from savings\
+             where id = %d" % flask.session['id']
+
+    cursor.execute(query)
+    raw_savings = cursor.fetchone()
+    savings = float(raw_savings[0]) - (line_of_credit * 2)
+
+    if savings > 4000:
+        new_line_of_credit = 2000
+    elif savings < 0:
+        new_line_of_credit = 500
+    else:
+        new_line_of_credit = 500 + (int(savings / 1000) * 500)
+
+    new_account_number = random.randint(100000000000, 999999999999)
+
+    query = "insert into credit_owner\
+            (account_number, id)\
+            values\
+            (%d, %d)" % (new_account_number, flask.session['id'])
+
+    cursor.execute(query)
+
+    query = "insert into credit\
+             (account_number, line_of_credit, line_of_credit_left,\
+             past_due_balance, interest_rate)\
+             values\
+             (%d, %d, %d, 0, 10);\
+             " % (new_account_number, new_line_of_credit, new_line_of_credit)
+
+    cursor.execute(query)
+    cursor.close()
+
+
+def delete_credit(account_number):
+    try:
+        cursor = connection.cursor()
+
+    except exceptions.NoDatabaseConnectionError:
+        print("Connection is not open")
+        return
+
+    query = "select line_of_credit, line_of_credit_left\
+             from credit\
+             where account_number = %d" % account_number
+
+    cursor.execute(query)
+    raw_info = cursor.fetchone()
+    line_of_credit = float(raw_info[0])
+    line_of_credit_left = float(raw_info[1])
+
+    if line_of_credit != line_of_credit_left:
+        flask.session['message'] = "Outstanding debts must be paid before \
+                                    account %d can be deleted" % account_number
+        return
+
+    query = "delete from credit\
+             where account_number = %d" % account_number
+
+    cursor.execute(query)
+
+    query = "delete from credit_owner\
+             where account_number = %d" % account_number
+
+    cursor.execute(query)
