@@ -12,3 +12,11 @@ class NoDatabaseConnectionError(Error):
 
 class InsufficientFundsError(Error):
     pass
+
+
+class IncorrectAccountInformationError(Error):
+    pass
+
+
+class IncorrectInputError(Error):
+    pass

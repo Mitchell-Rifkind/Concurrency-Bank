@@ -447,6 +447,12 @@ def update_info(field, value):
 
     if field == "zipcode_state":
         value = value.split(",")
+        if len(value) != 2 or type(value[0] != int or type(value[1] != str)):
+            flask.session['message'] = "Please enter Zipcode and State in the \
+                                         format 'Zipcode,State i.e. \
+                                         12525,New York'"
+            return
+
         query = 'insert ignore into state\
                  set\
                  zipcode = "%s", state = "%s";' % (value[0], value[1])
@@ -454,6 +460,18 @@ def update_info(field, value):
 
         field = "zipcode"
         value = value[0]
+
+    integers = ["phone", "street_number", "zipcode"]
+
+    if field in integers:
+        try:
+            value = int(value)
+        except ValueError:
+            flask.session['message'] = "Value must be entered as an integer"
+            return
+    elif not value.isalpha():
+        flask.session['message'] = "Value must only include letters"
+        return
 
     query = 'update customer\
              set %s = "%s"\
@@ -469,6 +487,16 @@ def personal_transfer(transfer_type, amount):
 
     except exceptions.NoDatabaseConnectionError:
         print("Connection is not open")
+        return
+
+    try:
+        amount = float(amount)
+    except ValueError:
+        flask.session['message'] = "You must enter a number amount"
+        return
+
+    if amount < 0:
+        flask.session['message'] = "You cannot transfer negative funds"
         return
 
     if transfer_type == "checking_to_savings":
@@ -548,6 +576,16 @@ def credit_payment(account, amount):
         print("Connection is not open")
         return
 
+    try:
+        amount = float(amount)
+    except ValueError:
+        flask.session['message'] = "You must enter a number amount"
+        return
+
+    if amount < 0:
+        flask.session['message'] = "You cannot transfer negative funds"
+        return
+
     query = "select balance\
              from customer\
              where id = %s;" % flask.session['id']
@@ -559,12 +597,22 @@ def credit_payment(account, amount):
         flask.session['message'] = "Insufficient Funds"
         return
 
-    query = "select line_of_credit, line_of_credit_left\
-             from credit\
-             where account_number = %s;" % account
+    try:
+        query = "select line_of_credit, line_of_credit_left\
+                 from credit\
+                 where account_number = %s;" % account
+        cursor.execute(query)
+        raw_info = cursor.fetchone()
 
-    cursor.execute(query)
-    raw_info = cursor.fetchone()
+        if raw_info is None:
+            raise exceptions.IncorrectAccountInformationError
+    except pymysql.err.InternalError:
+        flask.session['message'] = "The account number was in the wrong format"
+        return
+    except exceptions.IncorrectAccountInformationError:
+        flask.session['message'] = "The account entered does not exist"
+        return
+
     line_of_credit = float(raw_info[0])
     line_of_credit_left = float(raw_info[1])
 
@@ -576,13 +624,13 @@ def credit_payment(account, amount):
 
     query = "update customer\
              set balance = balance - %d\
-             where id = %d;" % (float(amount), flask.session['id'])
+             where id = %d;" % (amount, flask.session['id'])
 
     cursor.execute(query)
 
     query = "update credit\
              set line_of_credit_left = line_of_credit_left + %s\
-             where account_number = %s;" % (float(amount), account)
+             where account_number = %s;" % (amount, account)
 
     cursor.execute(query)
 
@@ -615,15 +663,15 @@ def send_money(recipient, amount):
         print("Connection is not open")
         return
 
-    query = "select balance\
-             from customer\
-             where id = %s;" % flask.session['id']
+    try:
+        amount = float(amount)
+        recipient = int(recipient)
+    except ValueError:
+        flask.session['message'] = "You must enter a number amount for both"
+        return
 
-    cursor.execute(query)
-    balance = float(cursor.fetchone()[0])
-
-    if balance < amount:
-        flask.session['message'] = "Insufficient Funds"
+    if amount < 0:
+        flask.session['message'] = "You cannot transfer negative funds"
         return
 
     query = "select balance\
@@ -637,15 +685,29 @@ def send_money(recipient, amount):
         flask.session['message'] = "Insufficient Funds"
         return
 
-    query = "update customer\
-             set balance = balance - %d\
-             where id = %d;" % (float(amount), flask.session['id'])
+    try:
+        query = "select id\
+                 from customer\
+                 where id = %d;" % (recipient)
 
-    cursor.execute(query)
+        cursor.execute(query)
+        raw_info = cursor.fetchone()
+
+        if raw_info is None:
+            raise exceptions.IncorrectAccountInformationError
+    except exceptions.IncorrectAccountInformationError:
+        flask.session['message'] = "The account entered does not exist"
+        return
 
     query = "update customer\
              set balance = balance + %d\
-             where id = %d;" % (float(amount), int(recipient))
+             where id = %d;" % (amount, recipient)
+
+    cursor.execute(query)
+
+    query = "update customer\
+             set balance = balance - %d\
+             where id = %d;" % (amount, flask.session['id'])
 
     cursor.execute(query)
 
@@ -844,6 +906,33 @@ def registration(form):
         print("Connection is not open")
         return
 
+    for key, value in form.items():
+        if value is None or value == "":
+            flask.session['message'] = "Please make sure all fields are \
+                                        entered"
+            return
+
+    strings = ['first_name', 'last_name', 'street_name', 'city', 'state']
+
+    integers = ['ssn', 'phone', 'initial_deposit', 'street_number', 'zipcode']
+
+    for entry in strings:
+        temp = form[entry].replace(" ", "")
+        if not temp.isalpha():
+            attribute = entry.replace("_", " ")
+            flask.session['message'] = "Your %s must only include alphabetical \
+                                        characters" % attribute
+            return
+
+    for entry in integers:
+        try:
+            form[entry] = int(form[entry])
+        except ValueError:
+            attribute = entry.replace("_", " ")
+            flask.session['message'] = "Your %s must be entered as a number\
+                                        " % attribute
+            return
+
     query = "select id\
              from customer\
              where email = '%s';" % form['email']
@@ -856,7 +945,7 @@ def registration(form):
 
     query = "select id\
              from customer\
-             where ssn = %d;" % int(form['ssn'])
+             where ssn = %d;" % form['ssn']
 
     cursor.execute(query)
 
@@ -864,13 +953,13 @@ def registration(form):
         flask.session['message'] = "An account already exists with this SSN"
         return
 
-    if int(form['balance']) < 20:
+    if int(form['initial_deposit']) < 20:
         flask.session['message'] = "The initial deposit must be at least $20"
         return
 
     query = "select state\
              from state\
-             where zipcode = %d" % int(form['zipcode'])
+             where zipcode = %d" % form['zipcode']
 
     cursor.execute(query)
 
@@ -878,7 +967,7 @@ def registration(form):
         query = "insert into state\
                  (zipcode, state)\
                  values\
-                 (%d, '%s');" % (int(form['zipcode']), form['state'])
+                 (%d, '%s');" % (form['zipcode'], form['state'])
 
         cursor.execute(query)
 
@@ -889,11 +978,10 @@ def registration(form):
               street_name, street_number, city, zipcode)\
               values\
               (%d, '%s', '%s', %d, %d, '%s', '%s', %d, '%s', %d, '%s', %d);\
-              " % (new_id, form['first_name'], form['last_name'],
-                   int(form['ssn']), int(form['phone']), form['email'],
-                   form['password'], float(form['balance']),
-                   form['street_name'], int(form['street_number']),
-                   form['city'], int(form['zipcode']))
+              " % (new_id, form['first_name'], form['last_name'], form['ssn'],
+                   form['phone'], form['email'], form['password'],
+                   form['initial_deposit'], form['street_name'], form['street_number'],
+                   form['city'], form['zipcode'])
 
     cursor.execute(query)
 
@@ -910,7 +998,7 @@ def registration(form):
              type_from, account_to, type_to)\
              values\
              (%d, %d, %d, %d, %d, %d, %d, %d, '%s', %d, '%s');\
-             " % (float(form['balance']), day, month, year, hour, minute,
+             " % (form['initial_deposit'], day, month, year, hour, minute,
                   second, new_id, 'Initial Deposit', new_id, 'checking')
 
     cursor.execute(query)

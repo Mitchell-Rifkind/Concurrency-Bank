@@ -48,7 +48,7 @@ def register():
     form['phone'] = flask.request.form['phone']
     form['email'] = flask.request.form['email']
     form['password'] = flask.request.form['password']
-    form['balance'] = flask.request.form['balance']
+    form['initial_deposit'] = flask.request.form['balance']
     form['street_name'] = flask.request.form['street_name']
     form['street_number'] = flask.request.form['street_number']
     form['city'] = flask.request.form['city']
@@ -125,17 +125,17 @@ def transfer_action():
     flask.session['message'] = None
     if flask.request.form['action'] == 'personal':
         transfer_type = flask.request.form['personal_transfer']
-        amount = float(flask.request.form['personal_transfer_amount'])
+        amount = flask.request.form['personal_transfer_amount']
         database_methods.personal_transfer(transfer_type, amount)
 
     elif flask.request.form['action'] == 'payment':
         account = flask.request.form['credit_account']
-        amount = float(flask.request.form['credit_payment'])
+        amount = flask.request.form['credit_payment']
         database_methods.credit_payment(account, amount)
 
     else:
         recipient = flask.request.form['send_to']
-        amount = float(flask.request.form['transfer_amount'])
+        amount = flask.request.form['transfer_amount']
         database_methods.send_money(recipient, amount)
 
     return flask.render_template('transfer.html')
@@ -151,6 +151,7 @@ def personal():
 
 @app.route('/personal', methods=['POST'])
 def update_personal():
+    flask.session['message'] = None
     if flask.request.form['action'] == "update_info":
         field = flask.request.form['updated_value']
         value = flask.request.form['update_personal']
@@ -163,6 +164,7 @@ def update_personal():
         flask.session['new_pass'] = None
 
     flask.session['personal_info'] = None
+    database_methods.get_personal_info()
     return flask.render_template("personal.html")
 
 
