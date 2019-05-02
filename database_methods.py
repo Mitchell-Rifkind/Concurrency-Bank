@@ -1,4 +1,4 @@
-# import database_config
+import database_config
 import pymysql
 import exceptions
 import flask
@@ -11,23 +11,23 @@ import random
 # Attempts to login and creates a session w/ name, email and debit balance
 try:
 
-    """connection = pymysql.connect(
+    connection = pymysql.connect(
             host=database_config.host,
             database=database_config.database,
             user=database_config.user,
             password=database_config.password,
             port=database_config.port,
             autocommit=True
-    )"""
+    )
 
-    connection = pymysql.connect(
+    """connection = pymysql.connect(
             host=os.environ['host'],
             database=os.environ['database'],
             user=os.environ['user'],
             password=os.environ['password'],
             port=int(os.environ['port']),
             autocommit=True
-    )
+    )"""
 
     if connection.open:
         print("Connected to MySQL db")
@@ -41,12 +41,6 @@ try:
 
 except exceptions.DatabaseConnectionError:
     print("Error while connecting to MySQL")
-
-
-def close_connect():
-    if connection.open:
-        connection.close()
-    print("MySQL connection is closed")
 
 
 def login(email, post_password):
@@ -254,7 +248,7 @@ def get_credit_history():
     query = "select account_number, vendor_name, amount, day, month, year,\
              hour, minutes, seconds\
              from credit_purchase natural join credit_owner natural join\
-             customer natural join vendor_name where id = %s\
+             customer natural join vendor_name where id = %s and active = 1\
              ;" % flask.session['id']
 
     cursor.execute(query)
@@ -262,7 +256,7 @@ def get_credit_history():
 
     query = 'select account_number\
              from credit_owner\
-             where id = %s;' % flask.session['id']
+             where id = %d and active = 1;' % flask.session['id']
 
     cursor.execute(query)
     raw_accounts = cursor.fetchall()
@@ -759,7 +753,7 @@ def get_credit_check():
 
     query = "select count(account_number)\
              from credit_owner\
-             where id = %d\
+             where id = %d and active = 1\
              group by id" % (flask.session['id'])
 
     cursor.execute(query)
@@ -784,7 +778,7 @@ def open_credit_account():
 
     query = "select sum(line_of_credit)\
              from credit natural join credit_owner\
-             where id = %d" % flask.session['id']
+             where id = %d and active = 1" % flask.session['id']
 
     cursor.execute(query)
     raw_credit = cursor.fetchone()
@@ -793,6 +787,8 @@ def open_credit_account():
         line_of_credit = 0
     else:
         line_of_credit = float(raw_credit[0])
+
+    print(line_of_credit)
 
     query = "select balance\
              from savings\
@@ -804,7 +800,9 @@ def open_credit_account():
         savings = 0
     else:
         savings = float(raw_savings[0])
+        print(savings)
     savings = savings - (line_of_credit * 2)
+    print(savings)
 
     if savings > 4000:
         new_line_of_credit = 2000
@@ -816,9 +814,9 @@ def open_credit_account():
     new_account_number = random.randint(100000000000, 999999999999)
 
     query = "insert into credit_owner\
-            (account_number, id)\
+            (account_number, id, active)\
             values\
-            (%d, %d)" % (new_account_number, flask.session['id'])
+            (%d, %d, 1)" % (new_account_number, flask.session['id'])
 
     cursor.execute(query)
 
@@ -855,15 +853,14 @@ def delete_credit(account_number):
                                     account %d can be deleted" % account_number
         return
 
-    query = "delete from credit\
+    cursor.execute(query)
+
+    query = "update credit_owner\
+             set active = 0\
              where account_number = %d" % account_number
 
     cursor.execute(query)
-
-    query = "delete from credit_owner\
-             where account_number = %d" % account_number
-
-    cursor.execute(query)
+    cursor.close()
 
 
 def update_password(old_pass, new_pass):
@@ -980,8 +977,8 @@ def registration(form):
               (%d, '%s', '%s', %d, %d, '%s', '%s', %d, '%s', %d, '%s', %d);\
               " % (new_id, form['first_name'], form['last_name'], form['ssn'],
                    form['phone'], form['email'], form['password'],
-                   form['initial_deposit'], form['street_name'], form['street_number'],
-                   form['city'], form['zipcode'])
+                   form['initial_deposit'], form['street_name'],
+                   form['street_number'], form['city'], form['zipcode'])
 
     cursor.execute(query)
 
