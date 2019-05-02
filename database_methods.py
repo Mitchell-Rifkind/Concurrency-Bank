@@ -856,6 +856,7 @@ def delete_credit(account_number):
 
     if raw_info is None:
         flask.session['message'] = "This account number does not exist"
+        return
 
     line_of_credit = float(raw_info[0])
     line_of_credit_left = float(raw_info[1])
