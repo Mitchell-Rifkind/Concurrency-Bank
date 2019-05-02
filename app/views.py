@@ -107,8 +107,7 @@ def new_line_of_credit():
     if flask.request.form['action'] == 'create_credit':
         database_methods.open_credit_account()
     else:
-        database_methods.delete_credit(int(
-            flask.request.form['account_number']))
+        database_methods.delete_credit(flask.request.form['account_number'])
 
     return flask.redirect('/credit')
 

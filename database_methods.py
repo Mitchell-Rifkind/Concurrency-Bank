@@ -840,9 +840,13 @@ def delete_credit(account_number):
         return
 
     try:
+        account_number = int(account_number)
         query = "select line_of_credit, line_of_credit_left\
                  from credit\
                  where account_number = %d" % account_number
+    except pymysql.InternalError:
+        flask.session['message'] = "Please enter only digits"
+        return
     except ValueError:
         flask.session['message'] = "Please enter only digits"
         return
