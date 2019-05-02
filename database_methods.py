@@ -1,4 +1,4 @@
-import database_config
+# import database_config
 import pymysql
 import exceptions
 import flask
@@ -11,23 +11,23 @@ import random
 # Attempts to login and creates a session w/ name, email and debit balance
 try:
 
-    connection = pymysql.connect(
+    """connection = pymysql.connect(
             host=database_config.host,
             database=database_config.database,
             user=database_config.user,
             password=database_config.password,
             port=database_config.port,
             autocommit=True
-    )
+    )"""
 
-    """connection = pymysql.connect(
+    connection = pymysql.connect(
             host=os.environ['host'],
             database=os.environ['database'],
             user=os.environ['user'],
             password=os.environ['password'],
             port=int(os.environ['port']),
             autocommit=True
-    )"""
+    )
 
     if connection.open:
         print("Connected to MySQL db")
