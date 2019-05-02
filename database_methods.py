@@ -839,12 +839,20 @@ def delete_credit(account_number):
         print("Connection is not open")
         return
 
-    query = "select line_of_credit, line_of_credit_left\
-             from credit\
-             where account_number = %d" % account_number
+    try:
+        query = "select line_of_credit, line_of_credit_left\
+                 from credit\
+                 where account_number = %d" % account_number
+    except ValueError:
+        flask.session['message'] = "Please enter only digits"
+        return
 
     cursor.execute(query)
     raw_info = cursor.fetchone()
+
+    if raw_info is None:
+        flask.session['message'] = "This account number does not exist"
+
     line_of_credit = float(raw_info[0])
     line_of_credit_left = float(raw_info[1])
 
